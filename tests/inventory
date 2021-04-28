@@ -1,0 +1,2 @@
+[clients]
+ansible-bastion.dev.dso.ncps.us-cert.gov ansible_host=10.13.1.15

@@ -1,0 +1,25 @@
+---
+
+  - name: Satellite Register
+    hosts: all
+    become: yes
+    gather_facts: True
+    vars_prompt:
+    - name: satellite_registration_user
+      prompt: "Enter Satellite Admin Username"
+      private: no
+    - name: satellite_registration_password
+      prompt: "Enter Satellite Admin Password"
+      private: yes
+
+    tasks:
+      #- name: Assert vars are defined. 
+      #   assert:
+      #  that:
+      #     - satellite_activation_key is defined
+      #    - satellite_fqdn is defined
+      #    - satellite_location is defined
+      #    - satellite_org is defined
+          #      success_msg: 'All required variables are defined'
+    - include_role:
+        name: ../ansible-role-satellite-register

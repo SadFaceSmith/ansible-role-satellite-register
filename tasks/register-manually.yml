@@ -1,0 +1,74 @@
+---
+- name: is the katello-ca rpm already installed?
+  shell: rpm -qa | grep katello-ca
+  failed_when: katelloregvar.stderr
+  register: katelloregvar
+
+- name: remove katello-ca when pointing to old sat or cap server
+  yum:
+    name: "katello-ca*"
+    state: absent
+    disable_gpg_check: yes
+    validate_certs: no
+  #when: 'satellite_fqdn not in katelloregvar.stdout'
+- name: Unregister from old Satellite/Capsule
+  redhat_subscription:
+    state: absent
+    server_insecure: true
+  when: satellite_unregister | bool
+  
+- name: Subscription Manager Clean
+  command: /sbin/subscription-manager clean
+  when: satellite_register_force | bool
+
+- name: Set Location Fact File
+  template:
+    src: templates/location.facts.j2
+    dest: /etc/rhsm/facts/location.facts
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Download katello-ca-consumer-latest.noarch.rpm
+  get_url:
+    url: "https://{{ satellite_fqdn }}/pub/katello-ca-consumer-latest.noarch.rpm"
+    dest: "/root/katello-ca-consumer-latest.noarch.rpm"
+    validate_certs: no
+
+- name: install the katello-ca-consumer-latest.noarch.rpm
+  yum:
+    name: "/root/katello-ca-consumer-latest.noarch.rpm"
+    state: present
+    disable_gpg_check: yes
+    
+- name: Satellite Register | Register Manually | Register with Subscription Manager
+  redhat_subscription:
+    state: present
+    activationkey: "{{ satellite_activation_key }}"
+    org_id: "{{ satellite_org }}"
+    force_register: "{{ satellite_register_force | default(False) }}"
+  register: 'registration_return'
+
+- name: Satellite Register | Register Manually | Enable required repositories
+  rhsm_repository:
+    name: "{{ item }}"
+    state: enabled
+  with_items:
+    - rhel-7-server-satellite-tools-6.*-rpms
+  
+- name: Satellite Register | Register Manually | Install katello-agent
+  yum:
+    name: katello-agent
+    state: latest
+  when: registration_return is success
+
+- name: Satellite Register | Register Manually | Start and Enable goferd
+  service:
+    name: goferd
+    enabled: yes
+    state: started
+ 
+- name: Remove local Katello RPM File
+  file:
+    path: /root/katello-ca-consumer-latest.noarch.rpm
+    state: absent
