@@ -1,5 +1,5 @@
 # Insert Satellite FQDN here
-satellite_fqdn: 'sat6-capsule-01.dev.dso.ncps.us-cert.gov'
+satellite_fqdn: 'sat6-capsule-01.example.com'
 
 # If you want to autosubscribe. Defaults to 'false'
 auto_subscribe: ''
@@ -12,7 +12,7 @@ satellite_registration_user: ''
 satellite_registration_password: "{{ vault_satellite_registration_password }}"
 
 # Organization Name. Wrap for full string if spaces exist
-satellite_org: 'DHS'
+satellite_org: 'ORG'
 
 # Location name, as above, wrap for full string if spaces exists
 satellite_location: 'DEV'
